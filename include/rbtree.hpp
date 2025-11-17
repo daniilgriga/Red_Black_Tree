@@ -7,7 +7,7 @@ namespace rb
     template<typename T>
     class Tree
     {
-        enum class Dir { LEFT, RIGHT };
+    private:
 
         class Node
         {
@@ -53,6 +53,8 @@ namespace rb
 
             Color color() const { return color_; }
             void set_color (Color color) { color_ = color; }
+            bool is_red() const { return color_ == Color::RED; }
+            bool is_black() const { return color_ == Color::BLACK; }
 
             const Node* left() const { return left_; }
             Node* left() { return left_;  }
@@ -70,6 +72,48 @@ namespace rb
             void set_subtree_size (size_t s_size) { subtree_size_ = s_size; }
 
         }; // class Node
+
+        enum class Dir { LEFT, RIGHT };
+
+        Node* root_;
+        size_t size_;
+
+    public:
+        Tree() : root_(nullptr), size_(0) {};
+
+        // ~Tree() { clear_tree (root_); }
+
+        Tree(const Tree& oth) : root_(nullptr)
+        {
+            // root_ = copy_subtree (oth, nullptr);
+        }
+
+        Tree(Tree&& oth) noexcept
+            : root_(oth.root_) , size_(oth.size_)
+        {
+            oth.root_ = nullptr;
+            oth.size_ = 0;
+        }
+
+        Tree& operator= (const Tree& oth)
+        {
+            Tree temp (oth);
+            swap (temp);
+
+            return *this;
+        }
+
+        Tree& operator= (Tree&& oth) noexcept
+        {
+            swap (oth);
+            return *this;
+        }
+
+        void swap (Tree& oth) noexcept
+        {
+            std::swap (root_, oth.root_);
+            std::swap (size_, oth.size_);
+        }
 
     }; // class Tree
 

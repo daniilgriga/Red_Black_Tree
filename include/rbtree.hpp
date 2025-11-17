@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 namespace rb
 {
@@ -21,24 +22,37 @@ namespace rb
             Node* parent_;
             size_t subtree_size_;
 
+            void update_subtree_size()
+            {
+                subtree_size_ = 1 +
+                    (left_ ? left_->subtree_size_ : 0) +
+                    (right_ ? right_->subtree_size_ : 0);
+            }
+
         public:
             template<typename K>
-            explicit Node (const K& data, Color c = Color::RED) :
+            explicit Node (const K& data, Color c = Color::RED,
+                                          Node* left = nullptr,
+                                          Node* right = nullptr,
+                                          Node* parent = nullptr) :
                 data_ (data),
                 color_ (c),
-                left_ (nullptr),
-                right_ (nullptr),
-                parent_ (nullptr),
-                subtree_size_ (1) {}
+                left_ (left),
+                right_ (right),
+                parent_ (parent),
+                subtree_size_ (1) { update_subtree_size(); }
 
             template<typename K>
-            explicit Node (K&& data, Color c = Color::RED) :
+            explicit Node (K&& data, Color c = Color::RED,
+                                          Node* left = nullptr,
+                                          Node* right = nullptr,
+                                          Node* parent = nullptr) :
                 data_ (std::move(data)),
                 color_ (c),
-                left_ (nullptr),
-                right_ (nullptr),
-                parent_ (nullptr),
-                subtree_size_ (1) {}
+                left_ (left),
+                right_ (right),
+                parent_ (parent),
+                subtree_size_ (1) { update_subtree_size(); }
 
             Node (const Node& oth) :
                 data_ (oth.data_),
@@ -71,6 +85,7 @@ namespace rb
             size_t subtree_size() const { return subtree_size_; }
             void set_subtree_size (size_t s_size) { subtree_size_ = s_size; }
 
+            friend class Tree;
         }; // class Node
 
         enum class Dir { LEFT, RIGHT };
@@ -78,18 +93,70 @@ namespace rb
         Node* root_;
         size_t size_;
 
+        Node* copy_subtree (const Node* node, Node* parent)
+        {
+            if (node == nullptr)
+                return nullptr;
+
+            Node* new_node = new Node (node->data(), node->color(), nullptr, nullptr, parent);
+
+            Node* left_child = copy_subtree (node->left(), new_node);
+            new_node->set_left (left_child);
+            if (left_child != nullptr)
+                left_child->set_parent (new_node);
+
+            Node* right_child = copy_subtree (node->right(), new_node);
+            new_node->set_right (right_child);
+            if (right_child != nullptr)
+                right_child->set_parent (new_node);
+
+            new_node->update_subtree_size();
+
+            return new_node;
+        }
+
+        void swap (Tree& oth) noexcept
+        {
+            std::swap (root_, oth.root_);
+            std::swap (size_, oth.size_);
+        }
+
+        void clear_tree (Node* node) noexcept
+        {
+            if (node == nullptr)
+                return;
+
+            std::vector<Node*> stack;
+            stack.push_back (node);
+
+            while (!stack.empty())
+            {
+                Node* current = stack.back();
+                stack.pop_back();
+
+                Node* left = current->left();
+                if (left)
+                    stack.push_back (left);
+
+                Node* right = current->right();
+                if (right)
+                    stack.push_back (right);
+
+                delete current;
+            }
+        }
+
     public:
         Tree() : root_(nullptr), size_(0) {};
 
-        // ~Tree() { clear_tree (root_); }
+        ~Tree() { clear_tree (root_); }
 
-        Tree(const Tree& oth) : root_(nullptr)
-        {
-            // root_ = copy_subtree (oth, nullptr);
-        }
+        Tree(const Tree& oth)
+            : root_(copy_subtree (oth.root_, nullptr)),
+              size_(oth.size_) {}
 
         Tree(Tree&& oth) noexcept
-            : root_(oth.root_) , size_(oth.size_)
+            : root_(oth.root_), size_(oth.size_)
         {
             oth.root_ = nullptr;
             oth.size_ = 0;
@@ -107,12 +174,6 @@ namespace rb
         {
             swap (oth);
             return *this;
-        }
-
-        void swap (Tree& oth) noexcept
-        {
-            std::swap (root_, oth.root_);
-            std::swap (size_, oth.size_);
         }
 
     }; // class Tree

@@ -22,7 +22,7 @@ namespace rb
             Node* parent_;
             size_t subtree_size_;
 
-            void update_subtree_size()
+            void upd_subtree_size()
             {
                 subtree_size_ = 1 +
                     (left_ ? left_->subtree_size_ : 0) +
@@ -39,7 +39,7 @@ namespace rb
                 left_ (left),
                 right_ (right),
                 parent_ (parent),
-                subtree_size_ (1) { update_subtree_size(); }
+                subtree_size_ (1) { upd_subtree_size(); }
 
             explicit Node (T&& data, Color c = Color::RED,
                                           Node* left = nullptr,
@@ -50,7 +50,7 @@ namespace rb
                 left_ (left),
                 right_ (right),
                 parent_ (parent),
-                subtree_size_ (1) { update_subtree_size(); }
+                subtree_size_ (1) { upd_subtree_size(); }
 
             Node (const Node& oth) :
                 data_ (oth.data_),
@@ -108,7 +108,7 @@ namespace rb
             if (right_child != nullptr)
                 right_child->set_parent (new_node);
 
-            new_node->update_subtree_size();
+            new_node->upd_subtree_size();
 
             return new_node;
         }
@@ -187,6 +187,51 @@ namespace rb
             return new_node;
         }
 
+        void rotate (Node* node, Dir dir)
+        {
+            if (node == nullptr)
+                return;
+
+            Node* pivot = (dir == Dir::LEFT) ? node->right() : node->left();
+            if (pivot == nullptr)
+                return;
+
+            pivot->set_parent (node->parent());
+            if (node->parent() != nullptr)
+            {
+                if (node->parent()->left() == node)
+                    node->parent()->set_left (pivot);
+                else
+                    node->parent()->set_right (pivot);
+            }
+            else
+            {
+                root_ = pivot;
+            }
+
+            if (dir == Dir::LEFT)
+            {
+                node->set_right (pivot->left());
+                if (pivot->left() != nullptr)
+                    pivot->left()->set_parent (node);
+
+                pivot->set_left (node);
+            }
+            else
+            {
+                node->set_left (pivot->right());
+                if (pivot->right() != nullptr)
+                    pivot->right()->set_parent (node);
+
+                pivot->set_right (node);
+            }
+
+            node->set_parent (pivot);
+
+            node->upd_subtree_size();
+            pivot->upd_subtree_size();
+        }
+
     public:
         Tree() : root_(nullptr), size_(0) {};
 
@@ -229,6 +274,9 @@ namespace rb
         {
             insert_data (data);
         }
+
+        void rotate_left  (Node* node) { rotate (node, Dir::LEFT); }
+        void rotate_right (Node* node) { rotate (node, Dir::RIGHT); }
 
     }; // class Tree
 

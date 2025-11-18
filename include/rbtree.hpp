@@ -83,6 +83,37 @@ namespace rb
             size_t subtree_size() const { return subtree_size_; }
             void set_subtree_size (size_t s_size) { subtree_size_ = s_size; }
 
+            Node* grandparent() const
+            {
+                return (parent_) ? parent_->parent_ : nullptr;
+            }
+
+            Node* uncle() const
+            {
+                Node* gp = grandparent();
+                if (gp == nullptr) return nullptr;
+
+                return (parent_ == gp->left_) ? gp->right_ : gp->left_;
+            }
+
+            Node* sibling() const
+            {
+                if (parent_ == nullptr)
+                    return nullptr;
+
+                return (this == parent_->left_) ? parent_->right_ : parent_->left_;
+            }
+
+            bool is_left_child() const
+            {
+                return (parent_ && this == parent_->left_);
+            }
+
+            bool is_right_child() const
+            {
+                return (parent_ && this == parent_->right_);
+            }
+
             friend class Tree;
         }; // class Node
 

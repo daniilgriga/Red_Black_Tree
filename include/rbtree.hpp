@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <vector>
+#include <sstream>
+#include <fstream>
 
 namespace rb
 {
@@ -182,7 +184,7 @@ namespace rb
             if (root_ == nullptr)
             {
                 root_ = new_node;
-                root_->set_color(Node::Color::BLACK);
+                root_->set_color (Node::Color::BLACK);
                 size_ = 1;
                 return new_node;
             }
@@ -263,6 +265,157 @@ namespace rb
             pivot->upd_subtree_size();
         }
 
+        void update_sizes (Node* node)
+        {
+            while (node != nullptr)
+            {
+                node->upd_subtree_size();
+                node = node->parent();
+            }
+        }
+
+        void rotate_left  (Node* node) { rotate (node, Dir::LEFT); }
+        void rotate_right (Node* node) { rotate (node, Dir::RIGHT); }
+
+        void fix_insert (Node* node)
+        {
+            fix_insert_root (node);
+        }
+
+        void fix_insert_root (Node* node)
+        {
+            if (node->parent() == nullptr)
+            {
+                node->set_color (Node::Color::BLACK);
+                root_ = node;
+                return;
+            }
+
+            fix_insert_black_parent (node);
+        }
+
+        void fix_insert_black_parent (Node* node)
+        {
+            Node* parent = node->parent();
+            if (parent == nullptr || parent->is_black())
+                return;
+
+            fix_insert_red_uncle (node);
+        }
+
+        void fix_insert_red_uncle (Node* node)
+        {
+            Node* uncle = node->uncle();
+
+            if (uncle != nullptr && uncle->is_red())
+            {
+                node->parent()->set_color (Node::Color::BLACK);
+                uncle->set_color (Node::Color::BLACK);
+
+                Node* gp = node->grandparent();
+                if (gp != nullptr)
+                {
+                    gp->set_color (Node::Color::RED);
+                    fix_insert_root (gp);
+                }
+            }
+            else
+            {
+                fix_insert_zigzag_case (node);
+            }
+        }
+
+        void fix_insert_zigzag_case (Node* node)
+        {
+            Node* parent = node->parent();
+            Node* gp = node->grandparent();
+            if (parent == nullptr || gp == nullptr)
+                return;
+
+            if (node->is_right_child() && parent->is_left_child())
+            {
+                rotate_left (parent);
+                node = node->left();
+            }
+            else if (node->is_left_child() && parent->is_right_child())
+            {
+                rotate_right (parent);
+                node = node->right();
+            }
+
+            fix_insert_straight_case (node);
+        }
+
+        void fix_insert_straight_case (Node* node)
+        {
+            Node* parent = node->parent();
+            Node* gp = node->grandparent();
+            if (parent == nullptr || gp == nullptr)
+                return;
+
+            parent->set_color (Node::Color::BLACK);
+            gp->set_color (Node::Color::RED);
+
+            if (node->is_left_child() && parent->is_left_child())
+                rotate_right (gp);
+            else if (node->is_right_child() && parent->is_right_child())
+                rotate_left (gp);
+        }
+
+        void generate_dot_node (std::stringstream& sstr, const Node* node) const
+        {
+            if (node == nullptr)
+                return;
+
+            std::string node_color = node->is_red() ? "red" : "black";
+            std::string fill_color = node->is_red() ? "#FF4444" : "#333333";
+            std::string font_color = "white";
+
+            sstr << "    \"" << node << "\" [label=\"" << node->data()
+                 << "\\n(size=" << node->subtree_size() << ")\", style=filled, fillcolor=\""
+                 << fill_color << "\", fontcolor=" << font_color << "];\n";
+
+            if (node->left())
+            {
+                sstr << "    \"" << node << "\" -> \"" << node->left() << "\" [label=\"L\"];\n";
+                generate_dot_node (sstr, node->left());
+            }
+            else
+            {
+                sstr << "    \"null_" << node << "_left\" [shape=point, width=0.2];\n";
+                sstr << "    \"" << node << "\" -> \"null_" << node << "_left\" [style=dashed];\n";
+            }
+
+            if (node->right())
+            {
+                sstr << "    \"" << node << "\" -> \"" << node->right() << "\" [label=\"R\"];\n";
+                generate_dot_node (sstr, node->right());
+            }
+            else
+            {
+                sstr << "    \"null_" << node << "_right\" [shape=point, width=0.2];\n";
+                sstr << "    \"" << node << "\" -> \"null_" << node << "_right\" [style=dashed];\n";
+            }
+        }
+
+        std::string make_dot() const
+        {
+            std::stringstream sstr;
+
+            sstr << "digraph RBTree {\n";
+            sstr << "    node [fontname=\"Arial\", shape=circle, width=1.5, height=1.5];\n";
+            sstr << "    edge [arrowhead=normal];\n\n";
+
+            if (root_ != nullptr)
+                generate_dot_node (sstr, root_);
+            else
+                sstr << "    \"empty\" [label=\"Empty Tree\"];\n";
+
+            sstr << "}\n";
+
+            return sstr.str();
+        }
+
     public:
         Tree() : root_(nullptr), size_(0) {};
 
@@ -303,11 +456,21 @@ namespace rb
 
         void insert (const T& data)
         {
-            insert_data (data);
+            Node* new_node = insert_data (data);
+            if (new_node != nullptr)
+            {
+                fix_insert (new_node);
+                update_sizes (new_node);
+            }
         }
 
-        void rotate_left  (Node* node) { rotate (node, Dir::LEFT); }
-        void rotate_right (Node* node) { rotate (node, Dir::RIGHT); }
+        void save_dot_to_file (const std::string& filename) const
+        {
+            std::ofstream file (filename);
+            file << make_dot();
+            file.close();
+            std::cout << "[.dot file saved]: " << filename << std::endl;
+        }
 
     }; // class Tree
 

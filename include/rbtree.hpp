@@ -30,8 +30,7 @@ namespace rb
             }
 
         public:
-            template<typename K>
-            explicit Node (const K& data, Color c = Color::RED,
+            explicit Node (const T& data, Color c = Color::RED,
                                           Node* left = nullptr,
                                           Node* right = nullptr,
                                           Node* parent = nullptr) :
@@ -42,8 +41,7 @@ namespace rb
                 parent_ (parent),
                 subtree_size_ (1) { update_subtree_size(); }
 
-            template<typename K>
-            explicit Node (K&& data, Color c = Color::RED,
+            explicit Node (T&& data, Color c = Color::RED,
                                           Node* left = nullptr,
                                           Node* right = nullptr,
                                           Node* parent = nullptr) :
@@ -146,6 +144,49 @@ namespace rb
             }
         }
 
+        Node* insert_data (const T& data)
+        {
+            Node* new_node = new Node (data);
+
+            if (root_ == nullptr)
+            {
+                root_ = new_node;
+                root_->set_color(Node::Color::BLACK);
+                size_ = 1;
+                return new_node;
+            }
+
+            Node* curr = root_;
+            Node* parent = nullptr;
+
+            while (curr != nullptr)
+            {
+                parent = curr;
+                if (new_node->data() < curr->data())
+                {
+                    curr = curr->left();
+                }
+                else if (new_node->data() > curr->data())
+                {
+                    curr = curr->right();
+                }
+                else
+                {
+                    delete new_node;
+                    return curr;
+                }
+            }
+
+            new_node->set_parent (parent);
+            if (new_node->data() < parent->data())
+                parent->set_left (new_node);
+            else
+                parent->set_right (new_node);
+
+            size_++;
+            return new_node;
+        }
+
     public:
         Tree() : root_(nullptr), size_(0) {};
 
@@ -174,6 +215,19 @@ namespace rb
         {
             swap (oth);
             return *this;
+        }
+
+        bool  empty() const noexcept { return size_ == 0; }
+        size_t size() const noexcept { return size_; }
+
+        void clear() const
+        {
+            clear_tree (root_);
+        }
+
+        void insert (const T& data)
+        {
+            insert_data (data);
         }
 
     }; // class Tree

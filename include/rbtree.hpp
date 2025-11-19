@@ -4,6 +4,9 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <iterator>
+#include <cstddef>
+#include <cassert>
 
 namespace rb
 {
@@ -125,6 +128,84 @@ namespace rb
         size_t size_;
 
     public:
+        class Iterator
+        {
+        private:
+            Iterator(const Tree* owner, Node* current)
+                : owner_(owner), curr_(current) {}
+
+            const Tree* owner_ = nullptr;
+            Node* curr_ = nullptr;
+
+        public:
+            // ==== Type Traits ==== //
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using reference = const T&;
+            using pointer = const T*;
+            using iterator_category = std::bidirectional_iterator_tag;
+            // ===================== //
+
+            Iterator() = default;
+
+            reference operator*() const
+            {
+                assert (curr_ != nullptr);
+                return curr_->data();
+            }
+
+            pointer operator->() const
+            {
+                return &(*(*this));
+            }
+
+            Iterator& operator++()
+            {
+                assert (curr_ != nullptr);
+                curr_ = owner_->next_node (curr_);
+
+                return *this;
+            }
+
+            Iterator operator++ (int)
+            {
+                Iterator dumb = *this;
+                ++(*this);
+
+                return dumb;
+            }
+
+            Iterator& operator--()
+            {
+                curr_ = (curr_ != nullptr) ? owner_->prev_node (curr_)
+                                           : owner_->max_node (owner_->root_);
+                assert (curr_ != nullptr);
+
+                return *this;
+            }
+
+            Iterator operator-- (int)
+            {
+                Iterator dumb = *this;
+                --(*this);
+
+                return dumb;
+            }
+
+            bool operator== (const Iterator& rht_sd) const
+            {
+                assert (owner_ == rht_sd.owner_);
+                return curr_ == rht_sd.curr_;
+            }
+
+            bool operator!= (const Iterator& rht_sd) const
+            {
+                return !(*this == rht_sd);
+            }
+
+            friend class Tree;
+        }; // class Iterator
+
         Tree() : root_(nullptr), size_(0) {};
 
         ~Tree() { clear_tree (root_); }
@@ -488,6 +569,9 @@ namespace rb
 
             return node;
         }
+
+        Node* min_node() const { return min_node (root_); }
+        Node* max_node() const { return max_node (root_); }
 
         Node* next_node (Node* node) const
         {

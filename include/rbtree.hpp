@@ -124,6 +124,63 @@ namespace rb
         Node* root_;
         size_t size_;
 
+    public:
+        Tree() : root_(nullptr), size_(0) {};
+
+        ~Tree() { clear_tree (root_); }
+
+        Tree(const Tree& oth)
+            : root_(copy_subtree (oth.root_, nullptr)),
+              size_(oth.size_) {}
+
+        Tree(Tree&& oth) noexcept
+            : root_(oth.root_), size_(oth.size_)
+        {
+            oth.root_ = nullptr;
+            oth.size_ = 0;
+        }
+
+        Tree& operator= (const Tree& oth)
+        {
+            Tree temp (oth);
+            swap (temp);
+
+            return *this;
+        }
+
+        Tree& operator= (Tree&& oth) noexcept
+        {
+            swap (oth);
+            return *this;
+        }
+
+        bool  empty() const noexcept { return size_ == 0; }
+        size_t size() const noexcept { return size_; }
+
+        void clear() const
+        {
+            clear_tree (root_);
+        }
+
+        void insert (const T& data)
+        {
+            Node* new_node = insert_data (data);
+            if (new_node != nullptr)
+            {
+                fix_insert (new_node);
+                update_sizes (new_node);
+            }
+        }
+
+        void save_dot_to_file (const std::string& filename) const
+        {
+            std::ofstream file (filename);
+            file << make_dot();
+            file.close();
+            std::cout << "[.dot file saved]: " << filename << std::endl;
+        }
+
+    private:
         Node* copy_subtree (const Node* node, Node* parent)
         {
             if (node == nullptr)
@@ -416,60 +473,56 @@ namespace rb
             return sstr.str();
         }
 
-    public:
-        Tree() : root_(nullptr), size_(0) {};
-
-        ~Tree() { clear_tree (root_); }
-
-        Tree(const Tree& oth)
-            : root_(copy_subtree (oth.root_, nullptr)),
-              size_(oth.size_) {}
-
-        Tree(Tree&& oth) noexcept
-            : root_(oth.root_), size_(oth.size_)
+        Node* min_node (Node* node) const
         {
-            oth.root_ = nullptr;
-            oth.size_ = 0;
+            while (node != nullptr && node->left() != nullptr)
+                node = node->left();
+
+            return node;
         }
 
-        Tree& operator= (const Tree& oth)
+        Node* max_node (Node* node) const
         {
-            Tree temp (oth);
-            swap (temp);
+            while (node != nullptr && node->right() != nullptr)
+                node = node->right();
 
-            return *this;
+            return node;
         }
 
-        Tree& operator= (Tree&& oth) noexcept
+        Node* next_node (Node* node) const
         {
-            swap (oth);
-            return *this;
-        }
+            if (node == nullptr)
+                return nullptr;
 
-        bool  empty() const noexcept { return size_ == 0; }
-        size_t size() const noexcept { return size_; }
+            if (node->right() != nullptr)
+                return min_node (node->right());
 
-        void clear() const
-        {
-            clear_tree (root_);
-        }
-
-        void insert (const T& data)
-        {
-            Node* new_node = insert_data (data);
-            if (new_node != nullptr)
+            Node* parent = node->parent();
+            while (parent != nullptr && node == parent->right())
             {
-                fix_insert (new_node);
-                update_sizes (new_node);
+                node = parent;
+                parent = parent->parent();
             }
+
+            return parent;
         }
 
-        void save_dot_to_file (const std::string& filename) const
+        Node* prev_node (Node* node) const
         {
-            std::ofstream file (filename);
-            file << make_dot();
-            file.close();
-            std::cout << "[.dot file saved]: " << filename << std::endl;
+            if (node == nullptr)
+                return nullptr;
+
+            if (node->left() != nullptr)
+                return max_node (node->left());
+
+            Node* parent = node->parent();
+            while (parent != nullptr && node == parent->left())
+            {
+                node = parent;
+                parent = parent->parent();
+            }
+
+            return parent;
         }
 
     }; // class Tree

@@ -262,7 +262,7 @@ namespace rb
 
         size_t range_queries_solve (const T& low, const T& high) const
         {
-            if (low > high)
+            if (low >= high)
                 return 0;
 
             Iterator it_low = lower_bound (low);

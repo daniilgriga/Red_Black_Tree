@@ -9,6 +9,6 @@ set (COMMON_COMPILE_OPTIONS
     $<$<CXX_COMPILER_ID:GNU,Clang>: -Wall -Wextra -Wpedantic>
     $<$<CXX_COMPILER_ID:MSVC>: /W4 /WX>)
 
-add_executable (tree src/rbtree.cpp)
+add_executable (tree src/driver.cpp)
 target_include_directories (tree PRIVATE include)
 target_compile_options (tree PRIVATE ${COMMON_COMPILE_OPTIONS})

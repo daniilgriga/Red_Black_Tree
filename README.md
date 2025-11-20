@@ -29,7 +29,7 @@ A **Red-Black Tree** is a self-balancing binary search tree that maintains speci
 
 This implementation provides a complete Red-Black Tree with iterator support and range query capabilities.
 
-### How to Install
+## How to Install
 
 ```bash
 git clone https://github.com/daniilgriga/Red_Black_Tree.git

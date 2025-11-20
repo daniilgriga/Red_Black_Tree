@@ -206,6 +206,11 @@ namespace rb
             friend class Tree;
         }; // class Iterator
 
+        // for STL
+        using iterator = Iterator;
+        using const_iterator = Iterator;
+        using value_type = T;
+
         Tree() : root_(nullptr), size_(0) {};
 
         ~Tree() { clear_tree (root_); }
@@ -233,6 +238,45 @@ namespace rb
         {
             swap (oth);
             return *this;
+        }
+
+        Iterator begin() const
+        {
+            return Iterator (this, min_node());
+        }
+
+        Iterator end() const
+        {
+            return Iterator (this, nullptr);
+        }
+
+        Iterator lower_bound (const T& key) const
+        {
+            return Iterator (this, find_lower_bound (key));
+        }
+
+        Iterator upper_bound (const T& key) const
+        {
+            return Iterator (this, find_upper_bound (key));
+        }
+
+        size_t range_queries_solve (const T& low, const T& high) const
+        {
+            if (low > high)
+                return 0;
+
+            Iterator it_low = lower_bound (low);
+            Iterator it_high = upper_bound (high);
+
+            size_t count = 0;
+
+            while (it_low != it_high)
+            {
+                count++;
+                it_low++;
+            }
+
+            return count;
         }
 
         bool  empty() const noexcept { return size_ == 0; }
@@ -295,21 +339,21 @@ namespace rb
             if (node == nullptr)
                 return;
 
-            std::vector<Node*> stack;
-            stack.push_back (node);
+            std::vector<Node*> vec;
+            vec.push_back (node);
 
-            while (!stack.empty())
+            while (!vec.empty())
             {
-                Node* current = stack.back();
-                stack.pop_back();
+                Node* current = vec.back();
+                vec.pop_back();
 
                 Node* left = current->left();
                 if (left)
-                    stack.push_back (left);
+                    vec.push_back (left);
 
                 Node* right = current->right();
                 if (right)
-                    stack.push_back (right);
+                    vec.push_back (right);
 
                 delete current;
             }
@@ -609,6 +653,41 @@ namespace rb
             return parent;
         }
 
+        enum class BoundType { LOWER, UPPER };
+
+        Node* find_bound (const T& key, BoundType type) const
+        {
+            Node* curr = root_;
+            Node* target = nullptr;
+
+            while (curr != nullptr)
+            {
+                bool cond = (type == BoundType::LOWER)
+                          ? (key <= curr->data_)
+                          : (key <  curr->data_);
+                if (cond)
+                {
+                    target = curr;
+                    curr = curr->left();
+                }
+                else
+                {
+                    curr = curr->right();
+                }
+            }
+
+            return target;
+        }
+
+        Node* find_lower_bound (const T& key) const
+        {
+            return find_bound (key, BoundType::LOWER);
+        }
+
+        Node* find_upper_bound (const T& key) const
+        {
+            return find_bound (key, BoundType::UPPER);
+        }
     }; // class Tree
 
 } // namespace rb

@@ -12,3 +12,15 @@ set (COMMON_COMPILE_OPTIONS
 add_executable (tree src/driver.cpp)
 target_include_directories (tree PRIVATE include)
 target_compile_options (tree PRIVATE ${COMMON_COMPILE_OPTIONS})
+
+enable_testing()
+
+add_executable (tree_tests tests/gtests.cpp)
+target_include_directories (tree_tests PRIVATE include)
+target_compile_options (tree_tests PRIVATE ${COMMON_COMPILE_OPTIONS})
+
+find_package (GTest REQUIRED)
+target_link_libraries (tree_tests PRIVATE GTest::gtest GTest::gtest_main)
+
+include (GoogleTest)
+gtest_discover_tests (tree_tests)

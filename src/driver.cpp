@@ -38,8 +38,6 @@ namespace rb_app
         {
             process_query (isstr, tree, results);
         }
-        else
-            assert (0 && "Use k for insert and q for query");
     }
 
     std::vector<size_t> process_input (const std::string& input)

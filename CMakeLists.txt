@@ -15,7 +15,7 @@ target_compile_options (tree PRIVATE ${COMMON_COMPILE_OPTIONS})
 
 enable_testing()
 
-add_executable (tree_tests tests/gtests.cpp)
+add_executable (tree_tests tests/unit/unit_tests.cpp)
 target_include_directories (tree_tests PRIVATE include)
 target_compile_options (tree_tests PRIVATE ${COMMON_COMPILE_OPTIONS})
 

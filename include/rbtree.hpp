@@ -236,7 +236,15 @@ namespace rb
 
         Tree& operator= (Tree&& oth) noexcept
         {
-            swap (oth);
+            if (this != &oth)
+            {
+                clear_tree (root_);
+                root_ = nullptr;
+                size_ = 0;
+
+                swap (oth);
+            }
+
             return *this;
         }
 

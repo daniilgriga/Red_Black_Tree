@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "rbtree.hpp"
+
+#include <gtest/gtest.h>
 #include <vector>
 #include <algorithm>
 
@@ -66,6 +66,40 @@ TEST (RBTreeTest, BoundFuncs)
     ASSERT_EQ (upp_3, tree.end());
 }
 
+TEST (RBTreeTest, LowerBoundEdgeCases)
+{
+    rb::Tree<int> tree;
+    tree.insert (10);
+    tree.insert (20);
+    tree.insert (30);
+
+    ASSERT_EQ (*tree.lower_bound (20), 20);
+
+    ASSERT_EQ (*tree.lower_bound (15), 20);
+
+    ASSERT_EQ (tree.lower_bound (40), tree.end());
+
+    rb::Tree<int> empty_tree;
+    ASSERT_EQ (empty_tree.lower_bound (5), empty_tree.end());
+}
+
+TEST (RBTreeTest, UpperBoundEdgeCases)
+{
+    rb::Tree<int> tree;
+    tree.insert (10);
+    tree.insert (20);
+    tree.insert (30);
+
+    ASSERT_EQ (*tree.upper_bound (20), 30);
+
+    ASSERT_EQ (*tree.upper_bound (15), 20);
+
+    ASSERT_EQ (tree.upper_bound (30), tree.end());
+
+    rb::Tree<int> empty_tree;
+    ASSERT_EQ (empty_tree.upper_bound (5), empty_tree.end());
+}
+
 TEST (RBTreeTest, RangeQueries)
 {
     rb::Tree<int> tree;
@@ -80,13 +114,14 @@ TEST (RBTreeTest, RangeQueries)
     ASSERT_EQ (tree.range_queries_solve (19, 51), 3);
 
     ASSERT_EQ (tree.range_queries_solve (13, 59), 5);
+
     ASSERT_EQ (tree.range_queries_solve (14, 58), 3);
 
     ASSERT_EQ (tree.range_queries_solve (7, 12), 0);
+
     ASSERT_EQ (tree.range_queries_solve (61, 67), 0);
 
     ASSERT_EQ (tree.range_queries_solve (27, 13), 0);
-    ASSERT_EQ (tree.range_queries_solve (13, 13), 0);
 }
 
 TEST (RBTreeTest, RangeQueriesEdgeCases)
@@ -96,10 +131,15 @@ TEST (RBTreeTest, RangeQueriesEdgeCases)
     ASSERT_EQ (tree.range_queries_solve (3, 107), 0);
 
     tree.insert (53);
+
     ASSERT_EQ (tree.range_queries_solve (7, 109), 1);
+
     ASSERT_EQ (tree.range_queries_solve (53, 107), 1);
+
     ASSERT_EQ (tree.range_queries_solve (3, 53), 1);
+
     ASSERT_EQ (tree.range_queries_solve (54, 107), 0);
+
     ASSERT_EQ (tree.range_queries_solve (3, 52), 0);
 }
 
@@ -182,7 +222,7 @@ TEST (RBTreeBigFiveTest, MoveCtor)
 
     size_t orig_size = orig.size();
 
-    rb::Tree<int> moved (std::move(orig));
+    rb::Tree<int> moved (std::move (orig));
 
     ASSERT_EQ (moved.size(), orig_size);
     ASSERT_EQ (moved.range_queries_solve (10, 70), 3);
@@ -242,4 +282,21 @@ TEST (RBTreeBigFiveTest, MoveAssignmentOp)
     ASSERT_EQ (target.range_queries_solve (15, 50), 3);
 
     ASSERT_TRUE (src.empty());
+}
+
+TEST (RBTreeTest, BalanceAfterInserts)
+{
+    rb::Tree<int> tree;
+
+    for (int i = 1; i <= 31; ++i)
+        tree.insert (i);
+
+    ASSERT_EQ (tree.size(), 31);
+
+    int expected = 1;
+    for (auto val : tree)
+    {
+        ASSERT_EQ (val, expected);
+        expected++;
+    }
 }

@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option (BUILD_TESTS "Build unit tests" ON)
-option (BUILD_BENCHMARKS "Build performance benchmarks" ON)
+option (BUILD_BENCHMARKS "Build performance benchmarks" OFF)
 
 set (COMMON_COMPILE_OPTIONS
     $<$<CXX_COMPILER_ID:GNU,Clang>: -Wall -Wextra -Wpedantic -Werror>

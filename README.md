@@ -104,7 +104,7 @@ cmake --build build/asan
 ### 4. Benchmarks Only
 
 ```bash
-cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_BENCHMARKS=ON
 cmake --build build/bench
 ```
 
@@ -163,7 +163,7 @@ Run GoogleTest:
 
 ```bash
 # Build with tests
-cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug
 
 # Run all tests
@@ -206,7 +206,10 @@ Compare performance of `rb::Tree` vs `std::set`:
 cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
 cmake --build build/bench
 
-# Run benchmark suite
+# Run benchmark suite (CMake target)
+cmake --build build/bench --target perf
+
+# Or manually
 cd tests/perf
 ./run_perf.sh ../../build/bench/rbtree_bench
 ```

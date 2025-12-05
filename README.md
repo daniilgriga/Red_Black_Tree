@@ -29,19 +29,6 @@ A **Red-Black Tree** is a self-balancing binary search tree that maintains speci
 
 This implementation provides a complete Red-Black Tree with iterator support and range query capabilities.
 
-## How to Install
-
-```bash
-git clone https://github.com/daniilgriga/Red_Black_Tree.git
-cd Red_Black_Tree/
-```
-
-## How to Build
-
-```bash
-cmake -S . -B build
-cmake --build build
-```
 
 ## How to Run
 
@@ -87,11 +74,26 @@ k 10 k 20 q 8 31 q 6 9 k 30 k 40 q 15 40
 - **Empty input**: allowed (empty output)
 - **Only insertions**: allowed (empty output until first query)
 
-## How to test
+## Usage
 
 ```bash
-cd build
-ctest --output-on-failure
+# Debug
+cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug
+
+# Release
+cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/release
+
+# Bench
+cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+cmake --build build/bench
+cmake --build build/bench --target perf
+
+# ASan
+cmake -S . -B build/asan -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+cmake --build build/asan
+ctest --test-dir build/asan --output-on-failure
 ```
 
 ## Comparison with `std::set`...

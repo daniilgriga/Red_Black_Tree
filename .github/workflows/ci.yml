@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  arch-linux-test:
+  unit-tests:
     runs-on: ubuntu-latest
     container: archlinux:latest
 
@@ -18,11 +18,59 @@ jobs:
       - name: Install Arch dependencies
         run: pacman -Syu --noconfirm && pacman -S --noconfirm cmake ninja gcc gtest
 
-      - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Configure and Build Tests
+        run: |
+          cmake -S . -B build-tests -G Ninja \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DBUILD_TESTS=ON \
+                -DBUILD_BENCHMARKS=OFF \
+                -DENABLE_ASAN=OFF
+          cmake --build build-tests
 
-      - name: Build
-        run: cmake --build build
+      - name: Run Unit Tests
+        run: cd build-tests && ctest --output-on-failure
 
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+  debug-asan:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Arch dependencies
+        run: pacman -Syu --noconfirm && pacman -S --noconfirm cmake ninja gcc gtest
+
+      - name: Configure Debug with ASan
+        run: |
+          cmake -S . -B build-asan -G Ninja \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DBUILD_TESTS=ON \
+                -DBUILD_BENCHMARKS=OFF \
+                -DENABLE_ASAN=ON
+          cmake --build build-asan
+
+      - name: Run Unit Tests with ASan
+        run: cd build-asan && ctest --output-on-failure
+
+  release-build:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Arch dependencies
+        run: pacman -Syu --noconfirm && pacman -S --noconfirm cmake ninja gcc
+
+      - name: Release build (app + benchmarks)
+        run: |
+          cmake -S . -B build-release -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_TESTS=OFF \
+                -DBUILD_BENCHMARKS=ON \
+                -DENABLE_ASAN=OFF
+          cmake --build build-release

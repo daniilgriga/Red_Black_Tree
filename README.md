@@ -29,71 +29,209 @@ A **Red-Black Tree** is a self-balancing binary search tree that maintains speci
 
 This implementation provides a complete Red-Black Tree with iterator support and range query capabilities.
 
+## Requirements
 
-## How to Run
+- **CMake** >= 3.15
+- **C++20** compatible compiler (GCC, Clang, MSVC)
+- **GoogleTest**
+
+## How To Install
+
+```bash
+git clone https://github.com/daniilgriga/Red_Black_Tree.git
+cd Red_Black_Tree/
+```
+
+## Project Structure
+
+```bash
+Red_Black_Tree/
+├── CMakeLists.txt
+├── include/
+│   ├── rbtree.hpp                # Red-Black Tree Impl.
+│   └── processor.hpp             # Command processor
+├── src/
+│   ├── driver.cpp                # Main application
+│   └── benchmark.cpp             # Performance benchmarks
+├── tests/
+│   ├── unit/
+│   │   └── unit_tests.cpp        # Unit tests (GoogleTest)
+│   ├── end2end/
+│   │   ├── 001.dat ... 023.dat   # Test inputs
+│   │   ├── 001.ans ... 023.ans   # Expected outputs
+│   │   ├── gen_tests.py          # Test generator
+│   │   └── run_e2e.sh            # E2E test runner
+│   └── perf/
+│       └── run_perf.sh           # Benchmark runner
+└── img/
+    └── tree.png
+```
+
+## Build Configurations
+
+### 1. Debug Build (Development)
+
+```bash
+cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug
+
+# Run app
+./build/debug/rbtree
+```
+
+### 2. Release Build (Production)
+
+```bash
+cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/release
+
+# Run app
+./build/release/rbtree
+```
+
+### 3. Debug with AddressSanitizer (Memory Checks)
+
+To detect memory leaks and undefined behavior:
+
+```bash
+cmake -S . -B build/asan -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+cmake --build build/asan
+
+# Run with sanitizer
+./build/asan/rbtree
+```
+
+### 4. Benchmarks Only
+
+```bash
+cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+cmake --build build/bench
+```
+
+## Usage
 
 ### Input Format
 
-The program accepts input data through standard input (`stdin`) in the following format:
+The program accepts commands through standard input in a single line:
 
-### Commands
+#### Commands
 
-- **`k <value>`** - insert a key into the tree
+- **`k <value>`** - Insert a key into the tree
   - `value` - integer value (key to insert)
-  - Example: `k 10` - inserts the number 10 into the tree
+  - Example: `k 10` - inserts the number 10
 
-- **`q <low> <high>`** - execute a range query
+- **`q <low> <high>`** - Execute a range query
   - `low` - lower bound of the range
   - `high` - upper bound of the range
-  - Example: `q 5 15` - find the number of elements in the range [5, 15]
+  - Returns: count of elements in range [low, high]
+  - Example: `q 5 15` - counts elements in [5, 15]
 
-### Rules
+#### Rules
 
-1. **All keys are unique** - duplicate insertion attempts are ignored
+1. **All keys are unique** - duplicate insertions are ignored
 2. **Range boundaries**: `low` ≤ `high` (if `low` > `high`, returns 0)
 3. **Inclusive range**: `[low, high]` - including boundary values
 4. **Command order**: arbitrary, processed sequentially
 5. **Unknown commands** are ignored
 
-### Example of Valid Input
+#### Example
 
-```
+**Input:**
+
+```bash
 k 10 k 20 q 8 31 q 6 9 k 30 k 40 q 15 40
 ```
 
-### Example Output
+**Output:**
 
-```
+```bash
 2 0 3
 ```
 
-### Error Handling
+**Explanation:**
+- `k 10 k 20` → inserts 10, 20
+- `q 8 31` → elements in [8, 31]: {10, 20} → **2**
+- `q 6 9` → elements in [6, 9]: {} → **0**
+- `k 30 k 40` → inserts 30, 40
+- `q 15 40` → elements in [15, 40]: {20, 30, 40} → **3**
 
-- **Invalid numbers**: ignored
-- **Incomplete commands**: ignored
-- **Empty input**: allowed (empty output)
-- **Only insertions**: allowed (empty output until first query)
+## Testing
 
-## Usage
+### Unit Tests
+
+Run GoogleTest:
 
 ```bash
-# Debug
-cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
+# Build with tests
+cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
 cmake --build build/debug
 
-# Release
-cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release
-cmake --build build/release
+# Run all tests
+cd build/debug
+ctest --output-on-failure
 
-# Bench
-cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
-cmake --build build/bench
-cmake --build build/bench --target perf
-
-# ASan
-cmake -S . -B build/asan -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
-cmake --build build/asan
-ctest --test-dir build/asan --output-on-failure
+# Or run directly
+./rbtree_tests
 ```
 
-## Comparison with `std::set`...
+### End-to-End Tests
+
+```bash
+cd tests/end2end
+./run_e2e.sh ../../build/release/rbtree
+```
+
+**Test coverage:**
+- Tests **001-010:** Basic cases (small inputs)
+- Tests **011-015:** Medium random cases (100-500 operations)
+- Tests **016-018:** Large cases (1000-5000 operations)
+- Tests **019-020:** Stress tests (10K operations)
+- Tests **021-023:** Extreme tests (50K-200K operations)
+
+### Generate New E2E Tests
+
+```bash
+cd tests/end2end
+python3 gen_tests.py
+```
+
+## Performance Benchmarks
+
+### Running Benchmarks
+
+Compare performance of `rb::Tree` vs `std::set`:
+
+```bash
+# Build benchmarks
+cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
+cmake --build build/bench
+
+# Run benchmark suite
+cd tests/perf
+./run_perf.sh ../../build/bench/rbtree_bench
+```
+
+### Benchmark Output Example
+
+```bash
+Performance Benchmark: rb::Tree vs std::set
+========================================================
+Test           rb::Tree     std::set      Ratio
+--------------------------------------------------------
+001                 2 μs          4 μs      0.50x
+002                 3 μs          5 μs      0.60x
+003                 2 μs          2 μs      1.00x
+...                 ...           ...        ...
+020              6407 μs       6107 μs      1.05x
+021            194444 μs     213550 μs      0.91x
+022            799722 μs     907568 μs      0.88x
+023           7945358 μs    8183133 μs      0.97x
+========================================================
+Legend: < 1.2x = Excellent | 1.2-2.0x = Good | > 2.0x = Slow
+```
+
+### What Benchmarks Measure
+
+- **Insert operations**: `tree.insert (key)`
+- **Range queries**: `tree.range_queries_solve (low, high)`
+- **Comparison**: My implementation vs C++ standard library `std::set`

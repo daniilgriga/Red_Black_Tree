@@ -41,16 +41,19 @@ endif ()
 
 # benchmarks
 if (BUILD_BENCHMARKS)
-    add_executable (rbtree_bench src/benchmark.cpp)
+    add_executable (rbtree_bench src/benchmark_rbtree.cpp)
     target_include_directories (rbtree_bench PRIVATE include)
     target_compile_options (rbtree_bench PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-    # force release optimizations for benchmarks
-    target_compile_options (rbtree_bench PRIVATE -O3 -march=native)
+    add_executable (stdset_bench src/benchmark_stdset.cpp)
+    target_include_directories (stdset_bench PRIVATE include)
+    target_compile_options (stdset_bench PRIVATE ${COMMON_COMPILE_OPTIONS})
 
     add_custom_target (perf
-        COMMAND bash ${CMAKE_SOURCE_DIR}/tests/perf/run_perf.sh ${CMAKE_BINARY_DIR}/rbtree_bench
+        COMMAND bash ${CMAKE_SOURCE_DIR}/tests/perf/run_perf.sh
+                ${CMAKE_BINARY_DIR}/rbtree_bench
+                ${CMAKE_BINARY_DIR}/stdset_bench
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/perf
-        DEPENDS rbtree_bench
+        DEPENDS rbtree_bench stdset_bench
     )
 endif ()

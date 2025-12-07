@@ -8,16 +8,22 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-if [ $# -eq 0 ]; then
-    echo -e "${RED}ERROR: Please provide path to benchmark binary${NC}"
-    echo "Usage: $0 <path_to_benchmark>"
+if [ $# -ne 2 ]; then
+    echo -e "${RED}ERROR: Please provide paths to both benchmark binaries${NC}"
+    echo "Usage: $0 <rbtree_bench> <stdset_bench>"
     exit 1
 fi
 
-BENCH_BIN="$1"
+RBTREE_BIN="$1"
+STDSET_BIN="$2"
 
-if [ ! -f "$BENCH_BIN" ]; then
-    echo -e "${RED}ERROR: $BENCH_BIN not found!${NC}"
+if [ ! -f "$RBTREE_BIN" ]; then
+    echo -e "${RED}ERROR: $RBTREE_BIN not found!${NC}"
+    exit 1
+fi
+
+if [ ! -f "$STDSET_BIN" ]; then
+    echo -e "${RED}ERROR: $STDSET_BIN not found!${NC}"
     exit 1
 fi
 
@@ -36,22 +42,23 @@ echo "--------------------------------------------------------"
 for dat_file in "$E2E_DIR"/*.dat; do
     test_id=$(basename "$dat_file" .dat)
 
-    output=$("$BENCH_BIN" < "$dat_file" 2>/dev/null)
+    rb_time=$("$RBTREE_BIN" < "$dat_file" 2>/dev/null)
+    std_time=$("$STDSET_BIN" < "$dat_file" 2>/dev/null)
 
-    rb_time=$(echo "$output" | grep "rb::Tree" | awk '{print $2}')
-    std_time=$(echo "$output" | grep "std::set" | awk '{print $2}')
-    ratio=$(echo "$output" | grep "Ratio" | awk '{print $2}')
-
-    ratio_clean=$(echo "$ratio" | sed 's/x$//')
+    if [ "$std_time" -gt 0 ] 2>/dev/null; then
+        ratio=$(awk -v rb="$rb_time" -v std="$std_time" 'BEGIN {printf "%.2f", rb/std}')
+    else
+        ratio="N/A"
+    fi
 
     color=$RED
-    if awk -v r="$ratio_clean" 'BEGIN { exit !(r < 1.2) }'; then
+    if awk -v r="$ratio" 'BEGIN { exit !(r < 1.2) }' 2>/dev/null; then
         color=$GREEN
-    elif awk -v r="$ratio_clean" 'BEGIN { exit !(r < 2.0) }'; then
+    elif awk -v r="$ratio" 'BEGIN { exit !(r < 2.0) }' 2>/dev/null; then
         color=$YELLOW
     fi
 
-    printf "%-10s %10s μs %10s μs ${color}%10s${NC}\n" "$test_id" "$rb_time" "$std_time" "$ratio"
+    printf "%-10s %10s μs %10s μs ${color}%9sx${NC}\n" "$test_id" "$rb_time" "$std_time" "$ratio"
 done
 
 echo "========================================================"

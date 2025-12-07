@@ -206,15 +206,16 @@ Compare performance of `rb::Tree` vs `std::set`:
 cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
 cmake --build build/bench
 
-# Run benchmark suite (CMake target)
+# Run benchmark comparison on e2e tests
 cmake --build build/bench --target perf
 
-# Or manually
-cd tests/perf
-./run_perf.sh ../../build/bench/rbtree_bench
+# Or separately with urs input
+./build/bench/rbtree_bench
+
+./build/bench/stdset_bench
 ```
 
-### Benchmark Output Example
+### Benchmark Output Example (perf CMake target)
 
 ```bash
 Performance Benchmark: rb::Tree vs std::set
